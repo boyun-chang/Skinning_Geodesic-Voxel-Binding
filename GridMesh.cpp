@@ -35,19 +35,10 @@ void Grid::drawPoint(void)
 
 	glPopMatrix();
 }
-/*
-Edge* Grid::Connect(Grid *grid, double weight)
-{
-	Edge* e = new Edge(this, grid, weight);
-	_edges.push_back(e);
-	grid->_edges.push_back(e);
-	return e;
-}*/
 
 GridMesh::GridMesh(Mesh *mesh, int res)
 {
 	_res = res;
-	//_hashRes = (int)(1.0 / 0.01);
 	_hashRes = _res;
 	_mesh = mesh;
 	_min.Set(0.0);
@@ -57,7 +48,7 @@ GridMesh::GridMesh(Mesh *mesh, int res)
 	init();
 	
 	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
-	scanline(); // ∞ËªÍ
+	scanline(); // Í≥ÑÏÇ∞
 	std::chrono::duration<double>sec = std::chrono::system_clock::now() - start;
 	printf("%f sec\n", sec.count());
 }
@@ -149,7 +140,6 @@ void GridMesh::extractSkeleton(void)
 		auto id = si * _res * _res + sj * _res + sk;
 		_grids[id]->_skeletonType = SkeletonType::SKELETON_NODE;
 		_grids[id]->_boneId = 0;
-		//_grids[id]->_boneId.push_back(0);
 	}
 	
 	for (auto b : _mesh->_skeleton->_bones)
@@ -229,7 +219,6 @@ void GridMesh::extractSkeleton(void)
 			auto id = x0 * _res * _res + y0 * _res + z0;
 			_grids[id]->_skeletonType = SkeletonType::SKELETON_NODE;
 			_grids[id]->_boneId = b->_id;
-			//_grids[id]->_boneId.push_back(b->_id);
 		}
 	}
 }
@@ -239,7 +228,7 @@ void GridMesh::scanline(void)
 	_hashTable->sort(_mesh);
 
 	auto dx = 1.0 / (double)_res;
-	// πŸøÓ¥ı∏Æ ≥ÎµÂ √£±‚   
+	// Î∞îÏö¥ÎçîÎ¶¨ ÎÖ∏Îìú Ï∞æÍ∏∞   
 	for (int i = 0; i < _res; i++) {
 		for (int j = 0; j < _res; j++) {
 			for (int k = 0; k < _res; k++) {
@@ -250,13 +239,6 @@ void GridMesh::scanline(void)
 				auto neighbors = _hashTable->getNeighbors(si, sj, sk, 1, 1, 1);		
 				for (auto tri : neighbors) {
 					auto f = _mesh->_faces[tri];
-					/*
-					if (_grids[id]->_type != GridType::EMPTY) {
-						break;
-					}*/
-					//_grids[id]->_type = GridType::BOUNDARAY_NODE;
-					//_grids[id]->_faces.push_back(f);
-					//for (auto v : f->_vertices) v->_flag = true;
 					if (_grids[id]->_type == GridType::BOUNDARAY_NODE) {
 						_grids[id]->_faces.push_back(f);
 					}
@@ -350,41 +332,14 @@ void GridMesh::gpuDijkstra(int source)
 	{
 		_grids[i]->_distance = distances[i];
 	}
-	//cout << "distances[137315] : " << _grids[137315]->_distance << endl;
 }
-/*
-void GridMesh::constructEdges(void)
-{
-	for (auto g : _grids)
-	{
-		if (g->_type == GridType::INTERIOR_NODE || g->_type == GridType::BOUNDARAY_NODE)
-		{
-			auto id0 = g->_i * _res * _res + g->_j * _res + g->_k;
-			int nids[3];
-			nids[0] = (g->_i + 1) * _res * _res + g->_j * _res + g->_k;
-			nids[1] = g->_i * _res * _res + (g->_j + 1) * _res + g->_k;
-			nids[2] = g->_i * _res * _res + g->_j * _res + (g->_k + 1);
-			for (int n = 0; n < 3; n++)
-			{
-				if (_grids[nids[n]]->_type == GridType::INTERIOR_NODE || _grids[nids[n]]->_type == GridType::BOUNDARAY_NODE)
-				{
-					auto to = _grids[nids[n]];
-					Vec3<double> diff = g->_center - to->_center;
-					double distance = diff.Length();
-					auto e = g->Connect(to, distance);
-					_edges.push_back(e);
-				}
-			}
-		}
-	}
-}*/
 
 void GridMesh::calculateWeight(int boneId)
 {
-	float a = 0.7; // æ÷¥œ∏ﬁ¿Ã≈Õ∞° πŸ¿Œµ˘ ∫ŒµÂ∑ØøÚ¿ª ¡¶æÓ«“ ºˆ ¿÷µµ∑œ «œ¥¬ [0, 1] π¸¿ß¿« ∏≈∞≥∫Øºˆ
+	float a = 0.7; // A parameter in the range [0, 1] that allows the animator to control the binding smoothness.
 	double alpha = 0.2;
 	double maxWeight = -1.0f;
-	//double beta = 0.5;
+	
 	for (auto v : _mesh->_vertices)
 	{
 		v->_flag = false;
@@ -402,22 +357,12 @@ void GridMesh::calculateWeight(int boneId)
 						Vec3<double> vvd = g->_center - v->_pos; // vertex to grid->center distance
 						double d = (g->_distance + vvd.Length()) / _mesh->_boundDistance;
 						double transformedD = (1 / d);
-						//if (d < 0.07) d = 0.07;
 						v->_weight[boneId] += pow((1 / ((1 - a) * d + a * d * d)), 2);
-						//v->_weight = log(1/d);
-						//v->_weight[boneId] += pow(1 / (1 + exp(-alpha * 1 / d)), 20);
-						//v->_weight = pow(d, 3);
-						//v->_weight[boneId] += pow(1 - d, 20);
-						//v->_weight[boneId] += d;
-						//v->_weight[boneId] += pow((1 - a)*(1 - d) + a * pow(1 - d, 2), 2);
-						//v->_flag = true;
-						//maxWeight = fmax(v->_weight[boneId], maxWeight);
 					}
 				}
 			}
 		}
 	}
-	//_maxWeight.push_back(maxWeight);
 }
 
 void GridMesh::exportWeight(int boneNum)
@@ -427,11 +372,7 @@ void GridMesh::exportWeight(int boneNum)
 	{
 		fprintf(fp, "%d", v->_index);
 		for (int i = 0; i < boneNum; i++)
-		{
-			/*
-			if (_maxWeight[i] != 0) v->_weight[i] = v->_weight[i];//v->_weight[i] /= _maxWeight[i];
-			else v->_weight[i] = v->_weight[i - 1];*/
-			
+		{	
 			fprintf(fp, ",%lf", v->_weight[i]);
 		}
 		fprintf(fp, "\n");
@@ -442,10 +383,6 @@ void GridMesh::exportWeight(int boneNum)
 void GridMesh::findPath(void)
 {
 	cout << "Running CUDA Dijkstra..." << endl;
-	//constructEdges();
-	//Graph *graph = new Graph(_grids,/* _edges,*/ _res);
-	//vector<int> sources;
-	//int* d_sources = nullptr;
 	
 	for (auto g : _grids)
 	{
@@ -453,29 +390,9 @@ void GridMesh::findPath(void)
 		{
 			int id = g->_i * _res * _res + g->_j * _res + g->_k;
 			gpuDijkstra(id);
-			//sources.push_back(id);
-			//Path* route = graph->Find(id);
 			calculateWeight(g->_boneId);
-			/*
-			for (auto boneId : g->_boneId)
-			{
-				calculateWeight(boneId);
-			}*/
-			// _grids[id]->_faces' _vertex ∞ËªÍ
-			//delete route;
 		}
 	}
-	/*
-	int M = sources.size();
-	int N = _grids.size();
-
-	graph->copyToDeivice();
-	cudaMalloc(&d_sources, sources.size() * sizeof(int));
-	cudaMemcpy(d_sources, sources.data(), sources.size() * sizeof(int), cudaMemcpyHostToDevice);
-
-	dim3 grid(M);
-	dim3 block(256);
-	*/
 	int boneNum = _mesh->_skeleton->_Joint.size();
 	for (int i = 0; i < boneNum; i++)
 	{
@@ -488,47 +405,7 @@ void GridMesh::findPath(void)
 	}
 	cout << "_maxWeight[0] : " << _maxWeight[0] << endl;
 	exportWeight(boneNum);
-
-	//int source = 1041982;
-	//int source = 749884;
-	/*
-	int source = 1339708;
-	Path* route = graph->Find(source);
-	calculateWeight();*/
-	/*
-	int destination = _res * _res * _res;
-	
-	for (auto g : _grids)
-	{
-		if (g->_type == GridType::BOUNDARAY_NODE)
-		{
-			int id = g->_i * _res * _res + g->_j * _res + g->_k;
-			if (abs(source - id) < abs(destination - id))
-			{
-				destination = id;
-			}
-		}
-	}
-	cout << "_grids[" << destination << "] : " << _grids[destination]->_distance << endl;
-	bool traversble = route->Traverse(graph, destination, _resultGrids);*/
 }
-/*
-void GridMesh::drawEdge(void)
-{
-	glPushMatrix();
-	glDisable(GL_LIGHTING);
-	glColor3f(1.0f, 1.0f, 1.0f);
-	glBegin(GL_LINES);
-	for (const auto& e : _edges) {
-		auto p0 = e->_from->_center;
-		auto p1 = e->_to->_center;
-		glVertex3f(p0.x(), p0.y(), p0.z());
-		glVertex3f(p1.x(), p1.y(), p1.z());
-	}
-	glEnd();
-	glEnable(GL_LIGHTING);
-	glPopMatrix();
-}*/
 
 void GridMesh::drawPath(void)
 {
@@ -564,15 +441,7 @@ void GridMesh::draw(void)
 		if (g->_skeletonType == SkeletonType::SKELETON_NODE /*&& g->_boneId == 0*/) {
 			glColor3f(1.0f, 0.0f, 1.0f);
 			g->draw();
-		}/*
-		if (g == _grids[1041982]) {
-			glColor3f(0.0f, 0.0f, 1.0f);
-			g->drawPoint();
 		}
-		else if (g == _grids[1978685]) {
-			glColor3f(0.0f, 0.0f, 1.0f);
-			g->drawPoint();
-		}*/
 		glEnable(GL_LIGHTING);
 	}
 }
