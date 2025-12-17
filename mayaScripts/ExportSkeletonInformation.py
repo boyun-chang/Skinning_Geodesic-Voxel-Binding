@@ -2,19 +2,19 @@ import maya.cmds as cmds
 import maya.api.OpenMaya as om
 
 def get_world_transforms():
-    # 모든 joint 찾기
+    # Find all joints
     joints = cmds.ls(type='joint')
     world_transforms = {}
 
     for joint in joints:
-        # Joint의 월드 스페이스 트랜스폼 매트릭스 가져오기
+        # Get the world space transform matrix of the joint
         world_matrix = cmds.xform(joint, q=True, ws=True, m=True)
-        # 월드 매트릭스를 사용하여 위치(Position) 계산
+        # Calculating position using world matrix
         mMatrix = om.MMatrix(world_matrix)
         mTransformMatrix = om.MTransformationMatrix(mMatrix)
         position = mTransformMatrix.translation(om.MSpace.kWorld)
 
-        # 결과 저장
+        # Save results
         world_transforms[joint] = position
 
     return world_transforms
