@@ -15,7 +15,9 @@ Development Process
 11. Apply weights to the character mesh with Deform > Import Weights and check the results.
 
 Result
+
 <img width="521" height="520" alt="Image" src="https://github.com/user-attachments/assets/878b4840-b142-4798-9d40-e66ae679a4b9" />
+![Image](https://github.com/user-attachments/assets/8a00ab65-7f8b-4c0b-9a83-8570c1764747)
 
 
 
