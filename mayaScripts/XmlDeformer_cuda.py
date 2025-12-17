@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 import maya.cmds as cmds
 import maya.api.OpenMaya as om
 
-# 파일 경로 설정
+# Set file path
 csv_path = "C:/Users/user/Desktop/boyun/codes/backup_251208/GeodesicVoxelBinding/VertexWeight.csv"
 xml_output_path = "C:/Users/user/Desktop/boyun/maya/cgxr/scripts/NewVertexWeight251215_cuda_65_1.xml"
 
@@ -22,14 +22,14 @@ for row in weights_data:
         if weight > 0.0:  # Only include non-zero weights
             joint_weights[i].append((vert_index, weight))
 
-# 메시 선택 확인
+# Confirm mesh selection
 selection = cmds.ls(selection=True)
 if not selection:
     cmds.error("스킨 메시를 먼저 선택하세요.")
 
 mesh = selection[0]
 
-# 스킨 클러스터 찾기
+# Finding Skin Clusters
 def get_skin_cluster(mesh):
     history = cmds.listHistory(mesh)
     skin_clusters = cmds.ls(history, type="skinCluster")
@@ -41,20 +41,20 @@ skin_cluster = get_skin_cluster(mesh)
 if not skin_cluster:
     cmds.error(f"{mesh}에 스킨 클러스터가 없습니다.")
 
-# 조인트 리스트 추출
+# Extract joint list
 joint_list = cmds.skinCluster(skin_cluster, q=True, inf=True)
 
-# 쉐이프 이름 추출
+# Extract shape names
 shape_node = cmds.listRelatives(mesh, shapes=True)[0]
 
-# XML 구조 만들기
+# Creating XML structure
 root = ET.Element("deformerWeight")
 
 header = ET.SubElement(root, "headerInfo")
 header.set("fileName", "D:/maya/projects/cgxr/scripts/NewVertexWeight0725_64_4.xml")
 header.set("worldMatrix", "1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 1.000000")
 
-# Vertex 좌표 가져오기
+# Get Vertex Coordinates
 def get_vertex_positions(mesh_name):
     sel_list = om.MSelectionList()
     sel_list.add(mesh_name)
@@ -64,7 +64,7 @@ def get_vertex_positions(mesh_name):
 
 vertex_positions = get_vertex_positions(mesh)
 
-# <shape> 태그 추가
+# Add <shape> tag
 shape_elem = ET.SubElement(root, "shape")
 shape_elem.set("name", shape_node)
 shape_elem.set("group", "0")
@@ -77,7 +77,7 @@ for idx, pt in enumerate(vertex_positions):
     pt_elem.set("index", str(idx))
     pt_elem.set("value", f"{pt.x:.6f} {pt.y:.6f} {pt.z:.6f}")
 
-# <weights> 태크 추가
+# Add the <weights> tag
 layer = 0
 for j, p in joint_weights.items():
     w_elem = ET.SubElement(root, "weights")
@@ -111,7 +111,7 @@ def indent(elem, level=0):
     if level and (not elem.tail or not elem.tail.strip()):
         elem.tail = i
 
-# XML 저장
+# save XML 
 indent(root)
 tree = ET.ElementTree(root)
 tree.write(xml_output_path, encoding='utf-8', xml_declaration=True)
