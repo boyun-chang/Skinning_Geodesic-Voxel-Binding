@@ -7,8 +7,6 @@
 #include <utility>
 #include "HashTable.h"
 #include "voxel_dijkstra.h"
-//#include "Graph.h"
-//#include "Path.h"
 
 using namespace std;
 
@@ -23,14 +21,6 @@ enum class SkeletonType {
 
 class Mesh;
 class Face;
-/*class Edge;
-struct GridDevice
-{
-	GridType	_type;
-	double		_distance;
-	GridDevice	*_prev; // 안되면 index로 연결
-	Edge		*_edges; // Edge 클래스 안되면 index로 Grid 연결
-};*/
 class Grid
 {
 public:	
@@ -38,33 +28,21 @@ public:
 	SkeletonType	_skeletonType = SkeletonType::EMPTY;
 	Vec3<double>	_min, _max, _center;
 	vector<Face*>	_faces;
-	//vector<Edge*>	_edges;
 	Grid			*_prev = nullptr;
 	double			_distance;
 	int				_i, _j, _k;
 	int				_boneId;
-	//vector<int>		_boneId;
+	
 public:
 	Grid(Vec3<double> min, Vec3<double> max) {
 		_min = min;
 		_max = max;
 		_center = (_min + _max) / 2.0;
-		//_boneId = -1;
 	}
 public:
 	void	id(int i, int j, int k);
 	void	draw(void);
 	void	drawPoint(void);
-public:
-	//Edge*	Connect(Grid *grid, double weight = 1.0f);
-public:/*
-	void	toDevice(GridDevice& dst) const
-	{
-		dst._type = _type;
-		dst._distance = _distance;
-		dst._prev - reinterpret_cast<GridDevice*>(_prev);
-		dst._edges = _edges.empty() ? nullptr : _edges[0];
-	}*/
 };
 
 class GridMesh
@@ -76,7 +54,6 @@ public:
 	vector<double>	_maxWeight;
 	vector<Grid*>	_grids;
 	vector<Grid*>	_resultGrids;
-	//vector<Edge*>	_edges;
 	vector<int>		_emptyGridsId;
 	Mesh			*_mesh;
 	HashTable		*_hashTable;
@@ -88,7 +65,6 @@ public:
 	void					scanline(void);
 	void					extractSkeleton(void);
 	void					gpuDijkstra(int source);
-	//void					constructEdges(void);
 	void					calculateWeight(int boneId);
 	void					findPath(void);
 	bool					intersect(Face *face, Grid *grid);
